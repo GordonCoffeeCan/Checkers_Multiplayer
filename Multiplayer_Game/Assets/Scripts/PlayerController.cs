@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+[RequireComponent(typeof(ConfigurableJoint))]
 [RequireComponent(typeof(PlayerController))]
 public class PlayerController : MonoBehaviour {
 
@@ -11,12 +11,28 @@ public class PlayerController : MonoBehaviour {
     [SerializeField]
     private float lookSensitivity = 3;
 
+    [SerializeField]
+    private float thrusterForce = 1000;
+
+
     private PlayerMotor motor;
+    private ConfigurableJoint joint;
+
+    [Header("Spring Settings:")]
+    [SerializeField]
+    private JointDriveMode jointMode = JointDriveMode.Position;
+    [SerializeField]
+    private float jointSpring = 20;
+    [SerializeField]
+    private float jointMaxForce = 40;
 
 	// Use this for initialization
 	void Start () {
         motor = GetComponent<PlayerMotor>();
-	}
+        joint = GetComponent<ConfigurableJoint>();
+
+        SetJointSettings(jointSpring);
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -44,9 +60,32 @@ public class PlayerController : MonoBehaviour {
         //Calculate Camera rotation as a 3D vector (turning character arround)
         float _xRot = Input.GetAxisRaw("Mouse Y");
 
-        Vector3 _cameraRotation = new Vector3(_xRot, 0, 0) * lookSensitivity;
+        float _cameraRotationX = _xRot * lookSensitivity;
 
         //Apply Camera rotation
-        motor.RotateCamera(_cameraRotation);
+        motor.RotateCamera(_cameraRotationX);
+
+        Vector3 _thrusterForce = Vector3.zero;
+
+        
+        //Calculate the thrusterforce base on player input
+        if (Input.GetButton("Jump")) {
+            _thrusterForce = Vector3.up * thrusterForce;
+            SetJointSettings(0);
+        } else {
+            SetJointSettings(jointSpring);
+        }
+
+        //Apply the thruster force
+        motor.ApplyThruster(_thrusterForce);
+    }
+
+    private void SetJointSettings(float _jointSpring) {
+        joint.yDrive = new JointDrive {
+            mode = jointMode,
+            positionSpring = _jointSpring,
+            maximumForce = jointMaxForce
+        };
+
     }
 }
