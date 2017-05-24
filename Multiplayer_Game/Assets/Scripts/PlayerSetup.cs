@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+[RequireComponent(typeof(Player))]
 public class PlayerSetup : NetworkBehaviour {
 
     [SerializeField]
@@ -10,6 +11,16 @@ public class PlayerSetup : NetworkBehaviour {
 
     [SerializeField]
     private string remoteLayerName = "RemotePlayer";
+
+    [SerializeField]
+    string dontDrawLayerName = "DontDraw";
+
+    [SerializeField]
+    GameObject playerGraphics;
+
+    [SerializeField]
+    private GameObject playerUIPrefab;
+    private GameObject playerUIInstance;
 
     private Camera sceneCamera;
 
@@ -23,16 +34,28 @@ public class PlayerSetup : NetworkBehaviour {
             if (sceneCamera != null) {
                 sceneCamera.gameObject.SetActive(false);
             }
+
+            //Disable player Graphics for local player
+            SetLayerRecursively(playerGraphics, LayerMask.NameToLayer(dontDrawLayerName));
+
+            //Create Player UI
+            playerUIInstance =  Instantiate(playerUIPrefab);
+            playerUIInstance.name = playerUIPrefab.name;
         }
 
-        RegisterPlayer();
+        GetComponent<Player>().Setup();
+    }
 
+    // Update is called once per frame
+    void Update() {
 
     }
 
-    private void RegisterPlayer() {
-        string _ID = "Player " + GetComponent<NetworkIdentity>().netId;
-        transform.name = _ID;
+    public override void OnStartClient() {
+        base.OnStartClient();
+        string _netID = GetComponent<NetworkIdentity>().netId.ToString();
+        Player _player = GetComponent<Player>();
+        GameManager.RegisterPlayer(_netID, _player);
     }
 
     private void AssignRemoteLayer() {
@@ -49,10 +72,16 @@ public class PlayerSetup : NetworkBehaviour {
         if(sceneCamera != null) {
             sceneCamera.gameObject.SetActive(true);
         }
+
+        Destroy(playerUIInstance);
+
+        GameManager.UnRgeisterPlayer(transform.name);
     }
 
-    // Update is called once per frame
-    void Update () {
-		
-	}
+    private void SetLayerRecursively(GameObject obj, int newLayer) {
+        obj.layer = newLayer;
+        foreach(Transform child in obj.transform) {
+            SetLayerRecursively(child.gameObject, newLayer);
+        }
+    }
 }

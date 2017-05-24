@@ -1,22 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [System.Serializable]
-public class PlayerWeapon : MonoBehaviour {
+public class PlayerWeapon {
 
     public string name = "Glock";
-    public float damage = 10;
-    public float range = 200;
+    public int damage = 10;
+    public int range = 100;
 
+    public float fireRate = 0;
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    public GameObject graphics;
 }
