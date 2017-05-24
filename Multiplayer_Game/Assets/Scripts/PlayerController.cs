@@ -15,9 +15,19 @@ public class PlayerController : MonoBehaviour {
     [SerializeField]
     private float thrusterForce = 1000;
 
+    [SerializeField]
+    private float thrusterFuelBurnSpeed = 1;
+
+    [SerializeField]
+    private float thrusterFuelRegenSpeed = 0.3f;
+    private float thrusterFuelAmount = 1;
+
     private PlayerMotor motor;
     private ConfigurableJoint joint;
     private Animator animator;
+
+    [SerializeField]
+    private LayerMask evironmentMask;
 
     [Header("Spring Settings:")]
     
@@ -37,6 +47,15 @@ public class PlayerController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+
+        //Setting target postion for spring. This makes the physics act right when it comes to applying gravity when flying over ojbects
+        RaycastHit _hit;
+        if(Physics.Raycast(transform.position, Vector3.down, out _hit, 100, evironmentMask)) {
+            joint.targetPosition = new Vector3(0, -_hit.point.y, 0);
+        } else {
+            joint.targetPosition = new Vector3(0, 0, 0);
+        }
+
         //Calculate movement velocity as a 3d vector
 
         float _xMov = Input.GetAxis("Horizontal");
@@ -73,12 +92,23 @@ public class PlayerController : MonoBehaviour {
 
         
         //Calculate the thrusterforce base on player input
-        if (Input.GetButton("Jump")) {
-            _thrusterForce = Vector3.up * thrusterForce;
-            SetJointSettings(0);
+        if (Input.GetButton("Jump") && thrusterFuelAmount > 0) {
+
+            thrusterFuelAmount -= thrusterFuelBurnSpeed * Time.deltaTime;
+
+            if(thrusterFuelAmount >= 0.01f) {
+                _thrusterForce = Vector3.up * thrusterForce;
+                SetJointSettings(0);
+            }
+
         } else {
+
+            thrusterFuelAmount += thrusterFuelRegenSpeed * Time.deltaTime;
+
             SetJointSettings(jointSpring);
         }
+
+        thrusterFuelAmount = Mathf.Clamp(thrusterFuelAmount, 0, 1);
 
         //Apply the thruster force
         motor.ApplyThruster(_thrusterForce);
@@ -90,5 +120,9 @@ public class PlayerController : MonoBehaviour {
             maximumForce = jointMaxForce
         };
 
+    }
+
+    public float GetThrusterFuelAmount() {
+        return thrusterFuelAmount;
     }
 }
