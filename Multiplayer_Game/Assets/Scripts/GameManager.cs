@@ -12,6 +12,9 @@ public class GameManager : MonoBehaviour {
 
     private static Dictionary<string, Player> players = new Dictionary<string, Player>();
 
+    [SerializeField]
+    private GameObject sceneCamera;
+
     private void Awake() {
         if(instance != null) {
             Debug.LogError("More than one gamemanager in the scene");
@@ -29,6 +32,14 @@ public class GameManager : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    public void SetSceneCameraActive(bool isActive) {
+        if(sceneCamera == null) {
+            return;
+        }
+
+        sceneCamera.SetActive(isActive);
+    }
 
     public static void RegisterPlayer(string _netID, Player _player) {
         string _playerID = PLAYER_ID_INDEX + _netID;
