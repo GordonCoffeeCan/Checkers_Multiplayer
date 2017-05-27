@@ -48,6 +48,10 @@ public class PlayerController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
+        if (PauseMenu.IsOn) {
+            return;
+        }
+
         //Setting target postion for spring. This makes the physics act right when it comes to applying gravity when flying over ojbects
         RaycastHit _hit;
         if(Physics.Raycast(transform.position, Vector3.down, out _hit, 100, evironmentMask)) {
